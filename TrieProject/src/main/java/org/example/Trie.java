@@ -11,7 +11,7 @@ public class Trie {
         }
     }
 
-    private TrieNode root = new TrieNode('/');
+    final TrieNode root = new TrieNode('/');
 
     //插入节点
     public void insert(String word) {
