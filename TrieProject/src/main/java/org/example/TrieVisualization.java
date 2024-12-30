@@ -3,8 +3,6 @@ package org.example;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -21,11 +19,12 @@ public class TrieVisualization extends Application {
 
     private final Pane pane = new Pane();
     private final Trie trie = new Trie();
-    private final Button insertButton = new Button("插入下一个字符");
+
     private String[] words;  // 当前插入的单词
     private int currentCharIndex = 0;  // 当前插入的位置
     private int currentWordIndex = 0;
-    private double startX = 700, startY = 100;
+    private final double startX = 700;
+    private final double startY = 100;
 
     public static void main(String[] args) {
         launch(args);
@@ -38,7 +37,7 @@ public class TrieVisualization extends Application {
         stage.setScene(scene);
 
         TextField textField = new TextField();
-        textField.setPromptText("请输入要插入的字符串");
+        textField.setPromptText("请输入单词，以空格分隔");
         textField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 words = textField.getText().split(" ");
@@ -54,14 +53,15 @@ public class TrieVisualization extends Application {
         // 将TextField添加到pane中
         pane.getChildren().add(textField);
 
-        // 设置按钮位置
+        // 设置插入按钮及位置
+        Button insertButton = new Button("插入下一个单词");
         insertButton.setLayoutX(700);
         insertButton.setLayoutY(700);
-        insertButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                insertNextCharacter();
-            }
+        insertButton.setOnAction(event -> {
+            Trie.TrieNode LCA = trie.findLCA(words[currentWordIndex].toLowerCase());
+            trie.insert(words[currentWordIndex].toLowerCase());
+            insertStringWithAnimation(words[currentWordIndex].toLowerCase(), LCA);
+            currentWordIndex++;
         });
 
         pane.getChildren().add(insertButton);
@@ -76,75 +76,76 @@ public class TrieVisualization extends Application {
 
     // 默认绘制根节点 "/"
     private void drawRootNode() {
-        Circle circle = new Circle(startX, 100, 20);
+        Circle circle = new Circle(startX, startY, 20);
         circle.setFill(Color.LIGHTGRAY);  // 根节点颜色
         Text text = new Text(startX - 5, startY + 5, "/");
         text.setFill(Color.BLACK);
         pane.getChildren().addAll(circle, text);
     }
 
-    // 插入下一个字符
-    private void insertNextCharacter() {
-        if (currentWordIndex < words.length) {
-            String currentWord = words[currentWordIndex];
-            if (currentCharIndex < currentWord.length()) {
-                char c = currentWord.charAt(currentCharIndex);
-                insertStringWithAnimation(c, currentCharIndex == 0 ? '/' : currentWord.charAt(currentCharIndex - 1));
-                currentCharIndex++;
+
+    private void insertStringWithAnimation(String w, Trie.TrieNode LCA) {
+        Trie.TrieNode cur = LCA;
+
+        if (LCA.data =='/'){
+            System.out.println("这是根节点/");
+        }
+
+        int i = LCA.level;
+        char c = w.charAt(i);
+        int index = c - 'a';
+        cur = cur.children[index];
+        System.out.println("公共祖先"+LCA.data+"下面第一个字符"+cur.data);
+
+        for (i = LCA.level; i < w.length(); i++) {
+            // 检查字符是否是有效的字母（a-z）
+            if (index < 0 || index >= 26) {
+                System.out.println("字符 '" + c + "' 无效，跳过该字符。");
+                continue;  // 如果字符不在 a-z 范围内，则跳过
             }
-            if (currentCharIndex >= currentWord.length()) {
-                currentCharIndex = 0;
-                currentWordIndex++;
+
+            int j = 0;
+            double newX = cur.calculateX(cur, j);
+            double newY = cur.calculateY(cur);
+            System.out.println("将会把字符"+c+"放在X: "+newX+" Y: "+newY);
+
+            // 碰撞检测并调整位置
+            while (trie.isPositionOverlap(newX, newY)) {
+                System.out.println("位置重叠，尝试新的位置,重叠位置为：X: "+newX+" Y: "+newY);
+                j++;  // 增加偏移量，尝试新的位置
+                newX = cur.calculateX(cur, j);
+            }
+
+            cur.setX(cur, newX);
+            cur.setY(cur, newY);
+
+            // 添加新节点位置到集合中
+            trie.nodePositions.add(new NodePosition(newX, newY));
+
+            drawNodeWithAnimation(newX, newY, c);
+
+            // 确保如果 cur.parent 为 null，使用当前节点的坐标
+            double parentX = (cur.parent != null) ? cur.parent.getX(cur.parent) : newX;
+            double parentY = (cur.parent != null) ? cur.parent.getY(cur.parent) : newY;
+
+            drawEdge(parentX, parentY, newX, newY);
+
+            // 检查是否存在子节点
+            if (i + 1 < w.length()) {
+                c = w.charAt(i + 1);
+                index = c - 'a';
+                if (cur.children[index] != null) {
+                    cur = cur.children[index];
+                } else {
+                    System.out.println("字符 '" + c + "' 的子节点为 null，结束插入。");
+                    break;
+                }
             }
         }
     }
 
-    private void insertStringWithAnimation(char c, char lastChar) {
-        Trie.TrieNode cur = trie.root;
-        double firstX = 100;
-        double x , y = startY + 100 + currentCharIndex * 100;  // 当前节点的坐标
-        double lastX = startX, lastY = startY;  // 上一个节点的坐标
 
-        if (lastChar != '/') {
-            // 如果不是根节点，则计算上一节点的位置
-            lastX = firstX + (lastChar - 'a') * 50;  // 上一节点的x坐标
-            lastY = startY + 100 + (currentCharIndex - 1) * 100;  // 上一节点的y坐标
-        }
 
-        // 计算当前字符的索引
-        int index = c - 'a';  // 将字符转为数组索引
-
-        // 如果字符不在 'a' 到 'z' 范围内，直接返回
-        if (index < 0 || index >= 26) {
-            System.out.println("无效字符：" + c);
-            return;
-        }
-
-        Trie.TrieNode nextNode = cur.children[index];
-        x = firstX + index * 50;  // 计算插入的x位置
-
-        // 检测该位置是否有元素，如果没有，创建新节点
-        if (nextNode == null) {
-            nextNode = trie.new TrieNode(c);
-            cur.children[index] = nextNode;
-        } else {
-            // 如果该位置已有节点，检测字符是否相同
-            if (nextNode.data != c) {
-                System.out.println("该位置已有不同字符的节点");
-                return;  // 如果是不同字符，返回避免插入
-            }
-        }
-
-        // 绘制连线
-        drawEdge(lastX, lastY, x, y);
-
-        // 绘制节点
-        drawNodeWithAnimation(x, y, c);
-
-        // 更新当前节点
-        cur = nextNode;
-        cur.isEndingChar = true;
-    }
 
     private void drawNodeWithAnimation(double x, double y, char value) {
         Circle circle = new Circle(x, y, 20);
