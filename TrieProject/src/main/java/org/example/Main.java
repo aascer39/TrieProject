@@ -3,18 +3,17 @@ package org.example;
 public class Main {
     public static void main(String[] args) {
         Trie trie = new Trie();
-        String[] words = {"how", "hello", "hi", "however", "apple"};
+        String[] words = { "hello", "hi", "however", "apple"};
         for (String word : words) {
             trie.insert(word);
         }
 //        Scanner scanner = new Scanner(System.in);
 //        String word = scanner.nextLine();
         System.out.println(trie.findString("apple"));
-        System.out.println(trie.getStart("apple").data);
         System.out.println(trie.findString("app"));
         System.out.println(trie.findLCA("application").level);
         System.out.println("application".charAt(4));
-        System.out.println(trie.findLCA("game").data + "  " + trie.findLCA("game").level);
+        System.out.println(trie.findLCA("how").data + "  " + trie.findLCA("how").level);
 //        trie.delete(word);
 //        for (String w :
 //                words) {
