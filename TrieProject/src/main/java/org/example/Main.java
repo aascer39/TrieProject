@@ -3,7 +3,7 @@ package org.example;
 public class Main {
     public static void main(String[] args) {
         Trie trie = new Trie();
-        String[] words = { "hello", "hi", "however", "apple"};
+        String[] words = { "hello", "hi", "however", "apple","howa"};
         for (String word : words) {
             trie.insert(word);
         }
@@ -14,6 +14,11 @@ public class Main {
         System.out.println(trie.findLCA("application").level);
         System.out.println("application".charAt(4));
         System.out.println(trie.findLCA("how").data + "  " + trie.findLCA("how").level);
+        System.out.println(trie.findStringLCA("how").data+ "  " + trie.findStringLCA("how").level);
+//        System.out.println(trie.findString("apple"));
+//        trie.delete("apple");
+//        System.out.println(trie.findString("apple"));
+//        System.out.println(trie.findLCA("app").data);
 //        trie.delete(word);
 //        for (String w :
 //                words) {
