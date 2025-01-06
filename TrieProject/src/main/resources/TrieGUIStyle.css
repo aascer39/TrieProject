@@ -1,0 +1,21 @@
+/* style.css */
+.root {
+    -fx-background-color: #f0f0f0;
+}
+
+.text-field {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+}
+
+.button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+}
+
+.text {
+    -fx-font-size: 20px;
+    -fx-fill: #333;
+}
